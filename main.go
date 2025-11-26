@@ -2,12 +2,14 @@ package main
 
 import (
 	"bufio"
+	"flag"
 	"fmt"
 	"os"
 	"strings"
 )
 
-func readFile(path string) (Stats, error) {
+// func readFile(path string) (Stats, error) Aggiungo anche i flag:
+func readFile(path string, summaryOnly bool, onlyErrors bool) (Stats, error) {
 	stats := Stats{
 		Counts: make(map[string]int),
 		Lines:  0,
@@ -22,11 +24,18 @@ func readFile(path string) (Stats, error) {
 	scanner := bufio.NewScanner(f)
 
 	for scanner.Scan() {
-		line := scanner.Text()                  //leggiamo tutte le righe del file
-		category := classifyLine(line)          // chiamo la funzione per categorizzare ogni linea
-		stats.Lines++                           //incrementa le line man mano che vengono lette
-		stats.Counts[category]++                // conta per categoria
-		fmt.Printf("[%s] %s\n", category, line) // stampiamo solo la riga
+		line := scanner.Text()         //leggiamo tutte le righe del file
+		category := classifyLine(line) // chiamo la funzione per categorizzare ogni linea
+		stats.Lines++                  //incrementa le line man mano che vengono lette
+		stats.Counts[category]++       // conta per categoria
+		// fmt.Printf("[%s] %s\n", category, line) // stampiamo solo la riga
+		//modifichiamo al fly la parte sopra, introducendo:
+		if !summaryOnly {
+			if onlyErrors && category != "error" {
+				continue
+			}
+			fmt.Printf("[%s] %s\n", category, line)
+		}
 	}
 
 	if err := scanner.Err(); err != nil { //Nel caso ci fosse qualche errore durante lo scan del file
@@ -55,23 +64,32 @@ func classifyLine(line string) string { //gli passo ogni line del file
 }
 
 func main() {
+	summaryOnly := flag.Bool("summary-only", false, "mostra solo il report finale")
+	onlyErrors := flag.Bool("only-errors", false, "mostra solo le righe di categoria error")
+
+	flag.Parse()
+
 	//os.Args legge gli argomenti all' interno dell' arg che gli vengono passati, un
 	//args[0] sarà il nome del programma
-	args := os.Args
+	// args := os.Args
+
+	//Utilizziamo ora flag al posto di os:
+	filePaths := flag.Args()
 
 	//Almeno due elementi in args
 
-	if len(args) < 2 {
+	if len(filePaths) == 0 {
 		fmt.Println("Inserisci più di due file.")
-		os.Exit(1) //Errore utente
+		flag.PrintDefaults() //stampa elenco flag disponibili
+		os.Exit(1)           //Errore utente
 	}
 
 	//Inserisco il nome del programma e gli argomenti che verranno passati successivamente
-	filePaths := args[1:]
+	// filePaths := args[1:]
 
 	for _, path := range filePaths {
 		fmt.Println(" -- Lettura file: -- ", path, " --- ") //log di chiarimento
-		stats, err := readFile(path)
+		stats, err := readFile(path, *summaryOnly, *onlyErrors)
 		if err != nil {
 			fmt.Println("Errore: ", err)
 			continue
