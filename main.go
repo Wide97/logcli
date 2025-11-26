@@ -7,11 +7,15 @@ import (
 	"strings"
 )
 
-func readFile(path string) error {
+func readFile(path string) (Stats, error) {
+	stats := Stats{
+		Counts: make(map[string]int),
+		Lines:  0,
+	}
 	//Apriamo il file in input
 	f, err := os.Open(path)
 	if err != nil { //Se durante l' apertura non ci sono errori, prosegue skippando qui
-		return fmt.Errorf("Errore nell' apertura dle file %s: %w:", path, err)
+		return stats, fmt.Errorf("Errore nell' apertura dle file %s: %w:", path, err)
 	}
 	defer f.Close() // Chidiamo f, altrimenti mi sembra di aver capito che occupiamo inutilmente memoria
 
@@ -20,14 +24,16 @@ func readFile(path string) error {
 	for scanner.Scan() {
 		line := scanner.Text()                  //leggiamo tutte le righe del file
 		category := classifyLine(line)          // chiamo la funzione per categorizzare ogni linea
+		stats.Lines++                           //incrementa le line man mano che vengono lette
+		stats.Counts[category]++                // conta per categoria
 		fmt.Printf("[%s] %s\n", category, line) // stampiamo solo la riga
 	}
 
 	if err := scanner.Err(); err != nil { //Nel caso ci fosse qualche errore durante lo scan del file
-		return fmt.Errorf("errore nella lettura del file %s: %w", path, err)
+		return stats, fmt.Errorf("errore nella lettura del file %s: %w", path, err)
 	}
 
-	return nil // torniamo null
+	return stats, nil // torniamo null
 }
 
 func classifyLine(line string) string { //gli passo ogni line del file
@@ -65,9 +71,24 @@ func main() {
 
 	for _, path := range filePaths {
 		fmt.Println(" -- Lettura file: -- ", path, " --- ") //log di chiarimento
-		err := readFile(path)                               // chiamo la funzione readfile
+		stats, err := readFile(path)
 		if err != nil {
-			fmt.Println("Errore : ", err) //chiamata solo in caso di errore
+			fmt.Println("Errore: ", err)
+			continue
 		}
+
+		fmt.Println("--- Report per: ", path, "---")
+		fmt.Println("Linee totali: ", stats.Lines)
+		fmt.Println("Counts: ")
+		for k, v := range stats.Counts {
+			fmt.Printf(" %s: %d\n", k, v)
+		}
+		fmt.Println()
+
 	}
+}
+
+type Stats struct {
+	Counts map[string]int
+	Lines  int
 }
