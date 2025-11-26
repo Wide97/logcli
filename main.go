@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"encoding/csv"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -64,10 +65,23 @@ func classifyLine(line string) string { //gli passo ogni line del file
 
 }
 
+func exportCSV(stats Stats) {
+	w := csv.NewWriter(os.Stdout)
+
+	//intestazione
+	w.Write([]string{"category", "count"})
+
+	//per ogni chiave, ne scriviamo il valore
+	for k, v := range stats.Counts {
+		w.Write([]string{k, fmt.Sprintf("%d", v)})
+	}
+}
+
 func main() {
 	summaryOnly := flag.Bool("summary-only", false, "mostra solo il report finale")
 	onlyErrors := flag.Bool("only-errors", false, "mostra solo le righe di categoria error")
 	jsonOut := flag.Bool("json", false, "esporta il report in formato json")
+	csvOut := flag.Bool("csv", false, "esporta il report in formato csv")
 
 	flag.Parse()
 
@@ -94,6 +108,12 @@ func main() {
 		stats, err := readFile(path, *summaryOnly, *onlyErrors)
 		if err != nil {
 			fmt.Println("Errore: ", err)
+			continue
+		}
+
+		//chiamo la nuova funzione per creare il report csv
+		if *csvOut {
+			exportCSV(stats)
 			continue
 		}
 		//Importo json encoding e quanto SEGUE:
