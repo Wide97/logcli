@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"strings"
 )
 
 func readFile(path string) error {
@@ -17,8 +18,9 @@ func readFile(path string) error {
 	scanner := bufio.NewScanner(f)
 
 	for scanner.Scan() {
-		line := scanner.Text() //leggiamo tutte le righe del file
-		fmt.Println(line)      // stampiamo solo la riga
+		line := scanner.Text()                  //leggiamo tutte le righe del file
+		category := classifyLine(line)          // chiamo la funzione per categorizzare ogni linea
+		fmt.Printf("[%s] %s\n", category, line) // stampiamo solo la riga
 	}
 
 	if err := scanner.Err(); err != nil { //Nel caso ci fosse qualche errore durante lo scan del file
@@ -26,6 +28,24 @@ func readFile(path string) error {
 	}
 
 	return nil // torniamo null
+}
+
+func classifyLine(line string) string { //gli passo ogni line del file
+
+	upper := strings.ToUpper(line) // confornto più robusto con caps
+
+	//catcho ogni caso, che sia error, warn, info o altro
+	switch {
+	case strings.Contains(upper, "ERROR"):
+		return "error"
+	case strings.Contains(upper, "WARN"):
+		return "warn"
+	case strings.Contains(upper, "INFO"):
+		return "info"
+	default:
+		return "other"
+	}
+
 }
 
 func main() {
