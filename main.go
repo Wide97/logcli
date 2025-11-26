@@ -11,6 +11,13 @@ import (
 	"github.com/Wide97/logcli/internal/model"
 )
 
+// Contenitore per path del file, statistiche e possibili errori
+type fileResult struct {
+	path  string
+	stats model.Stats
+	err   error
+}
+
 func exportCSV(stats model.Stats) {
 	w := csv.NewWriter(os.Stdout)
 
@@ -50,47 +57,102 @@ func main() {
 	//Inserisco il nome del programma e gli argomenti che verranno passati successivamente
 	// filePaths := args[1:]
 
+	//SOSTITUISCO TUTTO IL BLOCCO [2]:
+
+	// for _, path := range filePaths {
+	// 	fmt.Println(" -- Lettura file: -- ", path, " --- ") //log di chiarimento
+	// 	stats, err := analyzer.ReadFile(path, *summaryOnly, *onlyErrors)
+	// 	if err != nil {
+	// 		fmt.Println("Errore: ", err)
+	// 		continue
+	// 	}
+
+	// 	//chiamo la nuova funzione per creare il report csv
+	// 	if *csvOut {
+	// 		exportCSV(stats)
+	// 		continue
+	// 	}
+	// 	//Importo json encoding e quanto SEGUE:
+	// 	// fmt.Println("--- Report per: ", path, "---")
+	// 	// fmt.Println("Linee totali: ", stats.Lines)
+	// 	// fmt.Println("Counts: ")
+	// 	// for k, v := range stats.Counts {
+	// 	// 	fmt.Printf(" %s: %d\n", k, v)
+	// 	// }
+	// 	// fmt.Println()
+	// 	//DIVENTA:
+
+	// 	if *jsonOut {
+	// 		data, err := json.MarshalIndent(stats, "", "  ")
+	// 		if err != nil {
+	// 			fmt.Println("Errore json: ", err)
+	// 			continue
+	// 		}
+	// 		fmt.Println(string(data))
+	// 		continue
+	// 	}
+
+	// 	fmt.Println("--- Report per: ", path, "---")
+	// 	fmt.Println("Linee totali: ", stats.Lines)
+	// 	fmt.Println("Counts:")
+	// 	for k, v := range stats.Counts {
+	// 		fmt.Printf(" %s: %d\n", k, v)
+	// 	}
+
+	// 	fmt.Println()
+
+	//CON [2]
+
+	//channel per ricevere dati della go routine
+	results := make(chan fileResult)
+	// lancio una routine per ogni file
 	for _, path := range filePaths {
-		fmt.Println(" -- Lettura file: -- ", path, " --- ") //log di chiarimento
-		stats, err := analyzer.ReadFile(path, *summaryOnly, *onlyErrors)
-		if err != nil {
-			fmt.Println("Errore: ", err)
+		p := path //copia locale per evitare problemi di cattura variabile
+		fmt.Println("-- Lettura file:", p, "---")
+
+		go func() {
+			stats, err := analyzer.ReadFile(p, *summaryOnly, *onlyErrors)
+			results <- fileResult{
+				path:  p,
+				stats: stats,
+				err:   err,
+			}
+		}()
+	}
+	i := 0
+	//raccolgo i risultati, tante volte quanti sono i file
+	for i = 0; i < len(filePaths); i++ {
+		res := <-results //blocca finchè non arriva un risultato
+
+		if res.err != nil {
+			fmt.Println("errore su: ", res.path, ": ", res.err)
 			continue
 		}
-
-		//chiamo la nuova funzione per creare il report csv
-		if *csvOut {
-			exportCSV(stats)
-			continue
-		}
-		//Importo json encoding e quanto SEGUE:
-		// fmt.Println("--- Report per: ", path, "---")
-		// fmt.Println("Linee totali: ", stats.Lines)
-		// fmt.Println("Counts: ")
-		// for k, v := range stats.Counts {
-		// 	fmt.Printf(" %s: %d\n", k, v)
-		// }
-		// fmt.Println()
-		//DIVENTA:
-
 		if *jsonOut {
-			data, err := json.MarshalIndent(stats, "", "  ")
+			data, err := json.MarshalIndent(res.stats, "", "  ")
 			if err != nil {
-				fmt.Println("Errore json: ", err)
+				fmt.Println("Errore JSON su", res.path, ":", err)
 				continue
 			}
+			fmt.Println("== JSON report per:", res.path, "==")
 			fmt.Println(string(data))
 			continue
 		}
 
-		fmt.Println("--- Report per: ", path, "---")
-		fmt.Println("Linee totali: ", stats.Lines)
-		fmt.Println("Counts:")
-		for k, v := range stats.Counts {
-			fmt.Printf(" %s: %d\n", k, v)
+		if *csvOut {
+			fmt.Println("== CSV report per:", res.path, "==")
+			exportCSV(res.stats)
+			continue
 		}
 
+		fmt.Println("--- Report per:", res.path, "---")
+		fmt.Println("Linee totali:", res.stats.Lines)
+		fmt.Println("Counts:")
+		for k, v := range res.stats.Counts {
+			fmt.Printf("  %s: %d\n", k, v)
+		}
 		fmt.Println()
 
 	}
+
 }
