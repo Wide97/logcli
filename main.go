@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"encoding/json"
 	"flag"
 	"fmt"
 	"os"
@@ -66,6 +67,7 @@ func classifyLine(line string) string { //gli passo ogni line del file
 func main() {
 	summaryOnly := flag.Bool("summary-only", false, "mostra solo il report finale")
 	onlyErrors := flag.Bool("only-errors", false, "mostra solo le righe di categoria error")
+	jsonOut := flag.Bool("json", false, "esporta il report in formato json")
 
 	flag.Parse()
 
@@ -94,13 +96,33 @@ func main() {
 			fmt.Println("Errore: ", err)
 			continue
 		}
+		//Importo json encoding e quanto SEGUE:
+		// fmt.Println("--- Report per: ", path, "---")
+		// fmt.Println("Linee totali: ", stats.Lines)
+		// fmt.Println("Counts: ")
+		// for k, v := range stats.Counts {
+		// 	fmt.Printf(" %s: %d\n", k, v)
+		// }
+		// fmt.Println()
+		//DIVENTA:
+
+		if *jsonOut {
+			data, err := json.MarshalIndent(stats, "", "  ")
+			if err != nil {
+				fmt.Println("Errore json: ", err)
+				continue
+			}
+			fmt.Println(string(data))
+			continue
+		}
 
 		fmt.Println("--- Report per: ", path, "---")
 		fmt.Println("Linee totali: ", stats.Lines)
-		fmt.Println("Counts: ")
+		fmt.Println("Counts:")
 		for k, v := range stats.Counts {
 			fmt.Printf(" %s: %d\n", k, v)
 		}
+
 		fmt.Println()
 
 	}
