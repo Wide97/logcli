@@ -20,8 +20,19 @@ func ToCSV(stats model.Stats) string {
 		//Produce una stringa come error,10 (a capo) info, 25
 		sb.WriteString(fmt.Sprintf("%s, %d \n", k, v))
 	}
-	//aggiunge una riga finale con il numero di lines processate
-	sb.WriteString(fmt.Sprintf("lines, %d\n", stats.Lines))
-	//converte tutto in stringa
+	//se non ci sono errori finisco qui
+	if len(stats.Errors) == 0 {
+		return sb.String()
+	}
+	//separo con riga vuota
+	sb.WriteString("\n")
+
+	//seconda tabella con errori:
+	sb.WriteString("error_line, error_text\n")
+	for _, e := range stats.Errors {
+		sb.WriteString(fmt.Sprintf("%d,\"%s\"\n", e.Line, e.Text))
+	}
+
 	return sb.String()
+
 }
