@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"fmt"
 	"os"
-	"strings"
 
 	"github.com/Wide97/logcli/internal/classifier"
 	"github.com/Wide97/logcli/internal/model"
@@ -74,22 +73,4 @@ func ReadFile(path string, summaryOnly bool, onlyErrors bool, c classifier.LineC
 	}
 
 	return stats, nil // torniamo null
-}
-
-func ClassifyLine(line string) string { //gli passo ogni line del file
-
-	upper := strings.ToUpper(line) // confornto più robusto con caps
-
-	//catcho ogni caso, che sia error, warn, info o altro
-	switch {
-	case strings.Contains(upper, "ERROR"):
-		return "error"
-	case strings.Contains(upper, "WARN"):
-		return "warn"
-	case strings.Contains(upper, "INFO"):
-		return "info"
-	default:
-		return "other"
-	}
-
 }
