@@ -10,6 +10,9 @@ import (
 	"github.com/Wide97/logcli/internal/model"
 )
 
+// di default "dev", la sovrascriviamo in build con -ldflags
+var version = "dev"
+
 // Contenitore per path del file, statistiche e possibili errori
 type fileResult struct {
 	path  string
@@ -45,6 +48,11 @@ func main() {
 	// flag.Parse()
 	//con [5]:
 	opts := cli.ParseArgs()
+
+	if opts.Version {
+		fmt.Println("logcli version: ", version)
+		return
+	}
 
 	// Creiamo un classifier da riutilizzare per tutti i file
 	clf := classifier.NewSimpleClassifier()
