@@ -1,6 +1,10 @@
 package analyzer
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/Wide97/logcli/internal/classifier"
+)
 
 func TestClassifyLine(t *testing.T) {
 	//Imposto la struttura
@@ -21,7 +25,7 @@ func TestClassifyLine(t *testing.T) {
 	//Verifico il funzionamento chiamando il metodo classifyline
 	for _, tt := range test {
 		t.Run(tt.name, func(t *testing.T) {
-			got := ClassifyLine(tt.input)
+			got := classifier.NewSimpleClassifier().Classify(tt.input)
 			if got != tt.expected {
 				t.Fatalf("ClassifyLine(%q) = %q, expected %q", tt.input, got, tt.expected)
 			}

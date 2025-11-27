@@ -6,11 +6,12 @@ import (
 	"os"
 	"strings"
 
+	"github.com/Wide97/logcli/internal/classifier"
 	"github.com/Wide97/logcli/internal/model"
 )
 
 // func readFile(path string) (Stats, error) Aggiungo anche i flag:
-func ReadFile(path string, summaryOnly bool, onlyErrors bool) (model.Stats, error) {
+func ReadFile(path string, summaryOnly bool, onlyErrors bool, c classifier.LineClassifier) (model.Stats, error) {
 	stats := model.Stats{
 		Counts: make(map[string]int),
 		Lines:  0,
@@ -30,9 +31,9 @@ func ReadFile(path string, summaryOnly bool, onlyErrors bool) (model.Stats, erro
 	for scanner.Scan() {
 		//incremento il contatore
 		lineNo++
-		line := scanner.Text()         //leggiamo tutte le righe del file
-		category := ClassifyLine(line) // chiamo la funzione per categorizzare ogni linea
-		stats.Lines++                  //incrementa le line man mano che vengono lette
+		line := scanner.Text()       //leggiamo tutte le righe del file
+		category := c.Classify(line) // chiamo la funzione per categorizzare ogni linea
+		stats.Lines++                //incrementa le line man mano che vengono lette
 
 		stats.Counts[category]++ // conta per categoria
 		// fmt.Printf("[%s] %s\n", category, line) // stampiamo solo la riga

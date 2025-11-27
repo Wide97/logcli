@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/Wide97/logcli/internal/analyzer"
+	"github.com/Wide97/logcli/internal/classifier"
 	"github.com/Wide97/logcli/internal/cli"
 	"github.com/Wide97/logcli/internal/formatter"
 	"github.com/Wide97/logcli/internal/model"
@@ -44,6 +45,9 @@ func main() {
 	// flag.Parse()
 	//con [5]:
 	opts := cli.ParseArgs()
+
+	// Creiamo un classifier da riutilizzare per tutti i file
+	clf := classifier.NewSimpleClassifier()
 
 	//os.Args legge gli argomenti all' interno dell' arg che gli vengono passati, un
 	//args[0] sarà il nome del programma
@@ -118,7 +122,7 @@ func main() {
 
 		go func() {
 			//Ogni file viene analizzato in una routine in parallelo
-			stats, err := analyzer.ReadFile(p, opts.SummaryOnly, opts.OnlyErrors)
+			stats, err := analyzer.ReadFile(p, opts.SummaryOnly, opts.OnlyErrors, clf)
 			//Invia il risultato sul canale file result è la struct, results è il canale dove vengono scritti i risultati
 			// <- è un send
 			results <- fileResult{

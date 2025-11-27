@@ -3,6 +3,8 @@ package analyzer
 import (
 	"os"
 	"testing"
+
+	"github.com/Wide97/logcli/internal/classifier"
 )
 
 func TestReadFile(t *testing.T) {
@@ -26,7 +28,9 @@ error again` // minuscolo per testare case-insensitive
 	//chiudo il file temporaneo
 	tmpFile.Close()
 
-	stats, err := ReadFile(tmpFile.Name(), false, false)
+	clf := classifier.NewSimpleClassifier()
+
+	stats, err := ReadFile(tmpFile.Name(), false, false, clf)
 	if err != nil {
 		t.Fatalf("errore lettura del file %v", err)
 	}
