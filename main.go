@@ -2,12 +2,12 @@ package main
 
 import (
 	"encoding/csv"
-	"encoding/json"
 	"flag"
 	"fmt"
 	"os"
 
 	"github.com/Wide97/logcli/internal/analyzer"
+	"github.com/Wide97/logcli/internal/formatter"
 	"github.com/Wide97/logcli/internal/model"
 )
 
@@ -128,20 +128,48 @@ func main() {
 			fmt.Println("errore su: ", res.path, ": ", res.err)
 			continue
 		}
+
+		//Commento perchè, una volta creato il file json.go, me lo importo qui : [3]
+		// if *jsonOut {
+		// 	data, err := json.MarshalIndent(res.stats, "", "  ")
+		// 	if err != nil {
+		// 		fmt.Println("Errore JSON su", res.path, ":", err)
+		// 		continue
+		// 	}
+		// 	fmt.Println("== JSON report per:", res.path, "==")
+		// 	fmt.Println(string(data))
+		// 	continue
+		// }
+
+		//e scrivo: [3]
+
 		if *jsonOut {
-			data, err := json.MarshalIndent(res.stats, "", "  ")
+			//Dentro ToJSON (funzione dell' altro file) mi viene restituita una stringa leggibile a blocchi
+			jsonStr, err := formatter.ToJSON(res.stats)
 			if err != nil {
 				fmt.Println("Errore JSON su", res.path, ":", err)
 				continue
 			}
+			//stampo il risultato formattato
 			fmt.Println("== JSON report per:", res.path, "==")
-			fmt.Println(string(data))
+			fmt.Println(jsonStr)
 			continue
 		}
+		//Commento perchè, una volta creato il file csv.go, me lo importo qui : [4]
+		// if *csvOut {
+		// 	fmt.Println("== CSV report per:", res.path, "==")
+		// 	exportCSV(res.stats)
+		// 	continue
+		// }
+
+		//e scrivo: [4]
 
 		if *csvOut {
+			//to CSV crea string.Builder, aggiunge intestazione ecc.
 			fmt.Println("== CSV report per:", res.path, "==")
-			exportCSV(res.stats)
+			csvStr := formatter.ToCSV(res.stats)
+			//scrive la stringa ricevuta
+			fmt.Println(csvStr)
 			continue
 		}
 
