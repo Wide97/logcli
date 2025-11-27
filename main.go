@@ -1,11 +1,10 @@
 package main
 
 import (
-	"flag"
 	"fmt"
-	"os"
 
 	"github.com/Wide97/logcli/internal/analyzer"
+	"github.com/Wide97/logcli/internal/cli"
 	"github.com/Wide97/logcli/internal/formatter"
 	"github.com/Wide97/logcli/internal/model"
 )
@@ -32,27 +31,34 @@ type fileResult struct {
 // }
 
 func main() {
-	summaryOnly := flag.Bool("summary-only", false, "mostra solo il report finale")
-	onlyErrors := flag.Bool("only-errors", false, "mostra solo le righe di categoria error")
-	jsonOut := flag.Bool("json", false, "esporta il report in formato json")
-	csvOut := flag.Bool("csv", false, "esporta il report in formato csv")
-
-	flag.Parse()
+	//quando utente passa --summary-only il flag diventa true, altriemnti rimane false
+	//fa vedere solo il report finale --> ritornna un *bool, non bool
+	// summaryOnly := flag.Bool("summary-only", false, "mostra solo il report finale")
+	//stesso discorso, mostra solo righe in errore
+	// onlyErrors := flag.Bool("only-errors", false, "mostra solo le righe di categoria error")
+	//restituisce il processo json
+	// jsonOut := flag.Bool("json", false, "esporta il report in formato json")
+	//restituisce il processo csv
+	// csvOut := flag.Bool("csv", false, "esporta il report in formato csv")
+	//sostituisco la lettura dei flag : [5]
+	// flag.Parse()
+	//con [5]:
+	opts := cli.ParseArgs()
 
 	//os.Args legge gli argomenti all' interno dell' arg che gli vengono passati, un
 	//args[0] sarà il nome del programma
 	// args := os.Args
 
 	//Utilizziamo ora flag al posto di os:
-	filePaths := flag.Args()
+	// filePaths := flag.Args()
 
 	//Almeno due elementi in args
 
-	if len(filePaths) == 0 {
-		fmt.Println("Inserisci più di due file.")
-		flag.PrintDefaults() //stampa elenco flag disponibili
-		os.Exit(1)           //Errore utente
-	}
+	// if len(filePaths) == 0 {
+	// 	fmt.Println("Inserisci più di due file.")
+	// 	flag.PrintDefaults() //stampa elenco flag disponibili
+	// 	os.Exit(1)           //Errore utente
+	// }
 
 	//Inserisco il nome del programma e gli argomenti che verranno passati successivamente
 	// filePaths := args[1:]
@@ -106,13 +112,13 @@ func main() {
 	//channel per ricevere dati della go routine
 	results := make(chan fileResult)
 	// lancio una routine per ogni file
-	for _, path := range filePaths {
+	for _, path := range opts.Files {
 		p := path //copia locale per evitare problemi di cattura variabile
 		fmt.Println("-- Lettura file:", p, "---")
 
 		go func() {
 			//Ogni file viene analizzato in una routine in parallelo
-			stats, err := analyzer.ReadFile(p, *summaryOnly, *onlyErrors)
+			stats, err := analyzer.ReadFile(p, opts.SummaryOnly, opts.OnlyErrors)
 			//Invia il risultato sul canale file result è la struct, results è il canale dove vengono scritti i risultati
 			// <- è un send
 			results <- fileResult{
@@ -124,7 +130,7 @@ func main() {
 	}
 	i := 0
 	//raccolgo i risultati, tante volte quanti sono i file
-	for i = 0; i < len(filePaths); i++ {
+	for i = 0; i < len(opts.Files); i++ {
 		res := <-results //blocca finchè non arriva un risultato
 
 		if res.err != nil {
@@ -146,7 +152,7 @@ func main() {
 
 		//e scrivo: [3]
 
-		if *jsonOut {
+		if opts.JsonOutput {
 			//Dentro ToJSON (funzione dell' altro file) mi viene restituita una stringa leggibile a blocchi
 			jsonStr, err := formatter.ToJSON(res.stats)
 			if err != nil {
@@ -167,7 +173,7 @@ func main() {
 
 		//e scrivo: [4]
 
-		if *csvOut {
+		if opts.CsvOutput {
 			//to CSV crea string.Builder, aggiunge intestazione ecc.
 			fmt.Println("== CSV report per:", res.path, "==")
 			csvStr := formatter.ToCSV(res.stats)
