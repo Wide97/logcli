@@ -111,7 +111,10 @@ func main() {
 		fmt.Println("-- Lettura file:", p, "---")
 
 		go func() {
+			//Ogni file viene analizzato in una routine in parallelo
 			stats, err := analyzer.ReadFile(p, *summaryOnly, *onlyErrors)
+			//Invia il risultato sul canale file result è la struct, results è il canale dove vengono scritti i risultati
+			// <- è un send
 			results <- fileResult{
 				path:  p,
 				stats: stats,
