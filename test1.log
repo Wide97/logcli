@@ -1,0 +1,4 @@
+INFO Start A
+WARN Something odd
+ERROR Failure detected
+no level here
