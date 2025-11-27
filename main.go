@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/csv"
 	"flag"
 	"fmt"
 	"os"
@@ -18,18 +17,19 @@ type fileResult struct {
 	err   error
 }
 
-func exportCSV(stats model.Stats) {
-	w := csv.NewWriter(os.Stdout)
+//Ora questa funzione non mi serve più
+// func exportCSV(stats model.Stats) {
+// 	w := csv.NewWriter(os.Stdout)
 
-	//intestazione
-	w.Write([]string{"category", "count"})
+// 	//intestazione
+// 	w.Write([]string{"category", "count"})
 
-	//per ogni chiave, ne scriviamo il valore
-	for k, v := range stats.Counts {
-		w.Write([]string{k, fmt.Sprintf("%d", v)})
-	}
-	w.Flush()
-}
+// 	//per ogni chiave, ne scriviamo il valore
+// 	for k, v := range stats.Counts {
+// 		w.Write([]string{k, fmt.Sprintf("%d", v)})
+// 	}
+// 	w.Flush()
+// }
 
 func main() {
 	summaryOnly := flag.Bool("summary-only", false, "mostra solo il report finale")
